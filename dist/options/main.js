@@ -1,5 +1,5 @@
 import { Messages } from "../shared/messages.js";
-import { BUILT_IN_PRESETS, CUSTOM_PRESET_ID, makeCustomPresetId } from "../shared/presets.js";
+import { BUILT_IN_PRESETS, CUSTOM_PRESET_ID, DEFAULT_PRESET_ID, makeCustomPresetId } from "../shared/presets.js";
 import { defaultSettings, getSettings, normalizeSettings, saveSettings, SETTINGS_KEY } from "../shared/storage.js";
                                                                                                                
 import { labelFromUrl, normalizeUserUrl } from "../shared/url.js";
@@ -20,6 +20,7 @@ void init();
 
 async function init()                {
   settings = await getSettings();
+  await migrateBareCustomDefault();
   render();
   bindEvents();
 }
@@ -27,7 +28,8 @@ async function init()                {
 function bindEvents()       {
   defaultPresetSelect.addEventListener("change", () => {
     settings.defaultPresetId = defaultPresetSelect.value                  ;
-    void persist("Default service saved.");
+    settings.activePresetId = settings.defaultPresetId;
+    void persist("Side panel service saved.");
   });
 
   dnrToggle.addEventListener("change", () => {
@@ -97,7 +99,6 @@ function renderDefaultSelect()       {
   for (const preset of BUILT_IN_PRESETS) {
     defaultPresetSelect.append(option(preset.id, preset.label));
   }
-  defaultPresetSelect.append(option(CUSTOM_PRESET_ID, "Custom URL"));
   for (const customUrl of settings.customUrls) {
     defaultPresetSelect.append(option(makeCustomPresetId(customUrl.id), customUrl.label));
   }
@@ -114,7 +115,7 @@ function renderCustomUrls()       {
     const title = document.createElement("strong");
     title.textContent = "No custom URLs yet";
     const copy = document.createElement("p");
-    copy.textContent = "Add a trusted AI workspace or local test page, then pick it as your default service.";
+    copy.textContent = "Add a trusted AI workspace or local test page, then choose it as your side panel service.";
     empty.append(title, copy);
     customUrlList.append(empty);
     return;
@@ -247,7 +248,7 @@ async function deleteCustomUrl(id        )                {
   }
 
   if (settings.defaultPresetId === presetId) {
-    settings.defaultPresetId = "chatgpt";
+    settings.defaultPresetId = DEFAULT_PRESET_ID;
   }
   if (settings.activePresetId === presetId) {
     settings.activePresetId = settings.defaultPresetId;
@@ -304,6 +305,35 @@ async function setDnrEnabled(enabled         )                {
 async function persist(message        )                {
   settings = await saveSettings(settings);
   setStatus(message);
+}
+
+async function migrateBareCustomDefault()                {
+  if (settings.defaultPresetId !== CUSTOM_PRESET_ID) {
+    return;
+  }
+
+  const url = normalizeUserUrl(settings.lastUrlByPreset[CUSTOM_PRESET_ID] || "");
+  if (!url) {
+    settings.defaultPresetId = DEFAULT_PRESET_ID;
+    if (settings.activePresetId === CUSTOM_PRESET_ID) {
+      settings.activePresetId = DEFAULT_PRESET_ID;
+    }
+    settings = await saveSettings(settings);
+    return;
+  }
+
+  const id = crypto.randomUUID();
+  const presetId = makeCustomPresetId(id);
+  settings.customUrls.push({
+    id,
+    label: labelFromUrl(url),
+    url,
+    createdAt: Date.now()
+  });
+  settings.defaultPresetId = presetId;
+  settings.activePresetId = presetId;
+  settings.lastUrlByPreset[presetId] = url;
+  settings = await saveSettings(settings);
 }
 
 async function sendMessage(message                )                           {

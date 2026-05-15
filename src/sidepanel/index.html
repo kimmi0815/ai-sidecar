@@ -9,55 +9,21 @@
   <body>
     <a class="skip-link" href="#aiFrame">Skip to AI frame</a>
     <main class="app">
-      <header class="app-header">
-        <div class="brand-row">
-          <div class="brand" aria-label="AI Sidecar">
-            <span class="brand-mark" aria-hidden="true">AI</span>
-            <span>AI Sidecar</span>
-          </div>
-          <div class="toolbar-actions" aria-label="Page actions">
-            <button id="copyPageButton" class="button primary" type="button" title="Copy a prompt for the active page">Copy prompt</button>
-            <button id="reloadButton" class="icon-button" type="button" aria-label="Reload service" title="Reload service">
-              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v6h-6"/></svg>
-            </button>
-            <details id="moreActionsMenu" class="action-menu">
-              <summary class="icon-button" aria-label="More actions" title="More actions">
-                <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-              </summary>
-              <div class="menu-popover">
-                <button id="openWindowButton" class="menu-item" type="button">Open in side window</button>
-                <button id="openTabButton" class="menu-item" type="button">Open in tab</button>
-                <button id="optionsButton" class="menu-item" type="button">Options</button>
-              </div>
-            </details>
-          </div>
-        </div>
-        <div class="service-row">
-          <select id="presetSelect" aria-label="AI service"></select>
-          <div id="customUrlControls" class="custom-url-row" hidden>
-            <input id="customUrlInput" class="custom-url" type="url" placeholder="https://example.com/" aria-label="Custom URL">
-            <button id="applyCustomUrlButton" class="button" type="button">Open</button>
-          </div>
-        </div>
-      </header>
-
-      <section class="status-bar" role="status" aria-live="polite" aria-atomic="true">
+      <div class="status-live" role="status" aria-live="polite" aria-atomic="true">
         <span id="loadingSpinner" class="spinner" hidden aria-hidden="true"></span>
         <span id="statusText">Loading AI Sidecar...</span>
         <span id="elapsedText" class="elapsed" hidden></span>
-        <label class="toggle" title="Compatibility mode can help bundled AI services load in the side panel">
-          <input id="dnrToggle" type="checkbox">
-          <span>Compatibility mode</span>
-        </label>
-      </section>
-
-      <section id="customHelp" class="helper-text" hidden>
-        Use HTTPS, localhost, or 127.0.0.1. Saved custom URLs can be edited in Options.
-      </section>
+      </div>
 
       <section class="location-bar" aria-label="Current service URL">
         <span>URL</span>
         <input id="currentUrlInput" type="url" readonly aria-label="Current service URL">
+        <button id="reloadButton" class="icon-button" type="button" aria-label="Reload service" title="Reload service">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v6h-6"/></svg>
+        </button>
+        <button id="moreActionsButton" class="icon-button" type="button" aria-label="Open settings" title="Open settings">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </button>
       </section>
 
       <section class="frame-shell">
@@ -78,6 +44,16 @@
               <button id="fallbackOpenTabButton" class="button" type="button">Open in tab</button>
             </div>
             <p class="fallback-note">Sidecar can open the selected service URL, but embedded pages may not expose their current in-frame navigation.</p>
+          </div>
+        </section>
+
+        <section id="setupPanel" class="fallback setup-state" hidden>
+          <div class="fallback-content">
+            <h2>Choose a service in Options.</h2>
+            <p>AI Sidecar now keeps the side panel focused on one configured service. Pick a built-in service or saved custom URL in Options.</p>
+            <div class="fallback-actions">
+              <button id="setupOptionsButton" class="button primary" type="button">Open Options</button>
+            </div>
           </div>
         </section>
       </section>

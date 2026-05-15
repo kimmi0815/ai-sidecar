@@ -8,15 +8,20 @@
   </head>
   <body>
     <main class="options">
-      <header>
-        <h1>AI Sidecar Options</h1>
-        <p>Choose the default service, manage custom URLs, and control iframe compatibility mode.</p>
+      <header class="options-hero">
+        <div class="brand-heading">
+          <img class="brand-mark" src="../../assets/brand/sidecar-logo.svg" alt="" aria-hidden="true">
+          <div>
+            <h1>AI Sidecar Options</h1>
+            <p>Choose what appears in the side panel, manage custom URLs, and control iframe compatibility mode.</p>
+          </div>
+        </div>
       </header>
 
       <section class="option-card">
-        <h2>Default service</h2>
+        <h2>Side panel service</h2>
         <label class="field">
-          <span>Open this service first</span>
+          <span>Show this service in the side panel</span>
           <select id="defaultPresetSelect"></select>
         </label>
       </section>
@@ -43,7 +48,7 @@
           <input id="dnrToggle" type="checkbox">
           <span>Relax frame-blocking headers for allowlisted AI subframes</span>
         </label>
-        <p class="hint">This only applies to the bundled AI allowlist and only to sub_frame requests. It does not apply to all URLs or main frames.</p>
+        <p class="hint">On by default. This only applies to the bundled AI allowlist and only to sub_frame requests. It does not apply to all URLs or main frames.</p>
       </section>
 
       <div class="footer-actions">

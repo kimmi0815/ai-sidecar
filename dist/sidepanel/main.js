@@ -1,28 +1,16 @@
 import { Messages } from "../shared/messages.js";
-import { BUILT_IN_PRESETS, CUSTOM_PRESET_ID, diagnosticKey, makeCustomPresetId, resolveTarget } from "../shared/presets.js";
-import { createActiveTabPrompt } from "../shared/prompt.js";
+import { BUILT_IN_PRESETS, diagnosticKey, resolveTarget } from "../shared/presets.js";
 import { getSettings, normalizeSettings, saveSettings, SETTINGS_KEY } from "../shared/storage.js";
                                                                                                                                                  
-import { normalizeUserUrl } from "../shared/url.js";
 
 const LOAD_NOTICE_MS = 4500;
 const LOAD_TIMEOUT_MS = 8000;
 
-const presetSelect = element                   ("presetSelect");
-const customUrlControls = element             ("customUrlControls");
-const customUrlInput = element                  ("customUrlInput");
-const applyCustomUrlButton = element                   ("applyCustomUrlButton");
-const copyPageButton = element                   ("copyPageButton");
 const reloadButton = element                   ("reloadButton");
-const openTabButton = element                   ("openTabButton");
-const openWindowButton = element                   ("openWindowButton");
-const optionsButton = element                   ("optionsButton");
-const moreActionsMenu = element                    ("moreActionsMenu");
+const moreActionsButton = element                   ("moreActionsButton");
 const statusText = element             ("statusText");
 const loadingSpinner = element             ("loadingSpinner");
 const elapsedText = element             ("elapsedText");
-const dnrToggle = element                  ("dnrToggle");
-const customHelp = element             ("customHelp");
 const currentUrlInput = element                  ("currentUrlInput");
 let aiFrame = element                   ("aiFrame");
 const fallbackPanel = element             ("fallbackPanel");
@@ -30,6 +18,8 @@ const fallbackServiceName = element             ("fallbackServiceName");
 const fallbackOpenTabButton = element                   ("fallbackOpenTabButton");
 const fallbackOpenWindowButton = element                   ("fallbackOpenWindowButton");
 const fallbackReloadButton = element                   ("fallbackReloadButton");
+const setupPanel = element             ("setupPanel");
+const setupOptionsButton = element                   ("setupOptionsButton");
 const diagnosticsDetails = element                    ("diagnosticsDetails");
 const diagnosticsTable = element                         ("diagnosticsTable");
 const diagnosticsEnabled = isDebugMode();
@@ -53,55 +43,16 @@ async function init()                {
   syncSettingsUi();
   bindEvents();
 
-  const target = resolveTarget(settings);
-  if (target.url) {
-    await loadTarget(target.id, target.label, target.url);
-  } else {
-    setStatus("Enter a Custom URL, then press Enter.");
-  }
-  presetSelect.focus({ preventScroll: true });
+  await loadConfiguredTarget();
 }
 
 function bindEvents()       {
-  presetSelect.addEventListener("change", () => {
-    void handlePresetChange();
-  });
-
-  applyCustomUrlButton.addEventListener("click", () => {
-    void applyCustomUrl();
-  });
-
-  customUrlInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      void applyCustomUrl();
-    }
-  });
-
   reloadButton.addEventListener("click", () => reloadCurrentUrl());
   fallbackReloadButton.addEventListener("click", () => reloadCurrentUrl());
-  openTabButton.addEventListener("click", () => {
-    closeMoreActions();
-    void openCurrentInTab();
-  });
   fallbackOpenTabButton.addEventListener("click", () => void openCurrentInTab());
-  openWindowButton.addEventListener("click", () => {
-    closeMoreActions();
-    void openCurrentInFallbackWindow();
-  });
   fallbackOpenWindowButton.addEventListener("click", () => void openCurrentInFallbackWindow());
-  optionsButton.addEventListener("click", () => {
-    closeMoreActions();
-    chrome.runtime.openOptionsPage();
-  });
-
-  copyPageButton.addEventListener("click", () => {
-    void copyActivePagePrompt();
-  });
-
-  dnrToggle.addEventListener("change", () => {
-    void setDnrEnabled(dnrToggle.checked);
-  });
+  setupOptionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
+  moreActionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local" || !changes[SETTINGS_KEY]?.newValue) {
@@ -109,8 +60,16 @@ function bindEvents()       {
     }
 
     const previousFrameMode = settings.enableFrameHeaderRelaxation;
+    const previousDefaultPresetId = settings.defaultPresetId;
+    const previousConfiguredUrl = resolveTarget(settings, settings.defaultPresetId).url;
     settings = normalizeSettings(changes[SETTINGS_KEY].newValue);
     syncSettingsUi();
+
+    const target = resolveTarget(settings, settings.defaultPresetId);
+    if (previousDefaultPresetId !== settings.defaultPresetId || target.url !== previousConfiguredUrl) {
+      void loadConfiguredTarget();
+      return;
+    }
 
     if (previousFrameMode !== settings.enableFrameHeaderRelaxation && !applyingLocalFrameMode) {
       setStatus(`Compatibility mode ${settings.enableFrameHeaderRelaxation ? "enabled" : "disabled"}.`);
@@ -144,39 +103,21 @@ function bindEvents()       {
   }
 }
 
-async function handlePresetChange()                {
-  const activeId = presetSelect.value                  ;
-  settings.activePresetId = activeId;
-  updateCustomUrlUi(activeId);
-
-  const target = resolveTarget(settings, activeId);
+async function loadConfiguredTarget()                {
+  const target = resolveTarget(settings, settings.defaultPresetId);
   if (!target.url) {
-    await saveSettings(settings);
-    setStatus("Enter a Custom URL, then press Enter.");
+    await showSetupState();
     return;
   }
 
   await loadTarget(target.id, target.label, target.url);
 }
 
-async function applyCustomUrl()                {
-  const normalized = normalizeUserUrl(customUrlInput.value);
-  if (!normalized) {
-    setStatus("Use HTTPS, or localhost / 127.0.0.1 for local testing.");
-    return;
-  }
-
-  presetSelect.value = CUSTOM_PRESET_ID;
-  settings.activePresetId = CUSTOM_PRESET_ID;
-  settings.lastUrlByPreset[CUSTOM_PRESET_ID] = normalized;
-  await loadTarget(CUSTOM_PRESET_ID, "Custom URL", normalized);
-}
-
 async function loadTarget(id                , label        , url        )                {
   settings.activePresetId = id;
   settings.lastUrlByPreset[id] = url;
-  await saveSettings(settings);
   loadUrl(label, url);
+  await saveSettings(settings);
 }
 
 function loadUrl(label        , url        )       {
@@ -185,6 +126,7 @@ function loadUrl(label        , url        )       {
   currentUrlInput.value = url;
   fallbackServiceName.textContent = label;
   fallbackPanel.hidden = true;
+  setupPanel.hidden = true;
 
   const token = ++loadToken;
   const frame = replaceFrameForLoad(token, url);
@@ -215,6 +157,20 @@ function loadUrl(label        , url        )       {
   }, 0);
 }
 
+async function showSetupState()                {
+  clearLoadTimers();
+  currentUrl = "";
+  currentLabel = "";
+  currentUrlInput.value = "";
+  fallbackPanel.hidden = true;
+  setupPanel.hidden = false;
+  setLoading(false);
+  setStatus("Choose a side panel service in Options.");
+  aiFrame.src = "about:blank";
+  settings.activePresetId = settings.defaultPresetId;
+  await saveSettings(settings);
+}
+
 function replaceFrameForLoad(token        , expectedUrl        )                    {
   const nextFrame = aiFrame.cloneNode(false)                     ;
   nextFrame.addEventListener("load", () => {
@@ -237,7 +193,7 @@ function completeLoad(token        , expectedUrl        , status                
   clearLoadTimers();
   fallbackPanel.hidden = true;
   setLoading(false);
-  setStatus(`${currentLabel} loaded. If the frame looks blank, open it in a side window.`);
+  setStatus("");
   updateActiveDiagnostic(status);
 }
 
@@ -264,47 +220,6 @@ async function openCurrentInFallbackWindow()                {
   setStatus(response.ok ? "Opened right-side fallback window." : response.error || "Could not open fallback window.");
 }
 
-async function copyActivePagePrompt()                {
-  try {
-    const tab = await getActiveTab();
-    const text = createActiveTabPrompt(tab?.title, tab?.url);
-    await navigator.clipboard.writeText(text);
-    setStatus("Current page prompt copied.");
-  } catch (error) {
-    setStatus(error instanceof Error ? error.message : "Copy failed.");
-  }
-}
-
-async function getActiveTab()                                       {
-  const currentWindowTabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (currentWindowTabs[0]) {
-    return currentWindowTabs[0];
-  }
-
-  const focusedTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  return focusedTabs[0];
-}
-
-async function setDnrEnabled(enabled         )                {
-  dnrToggle.disabled = true;
-  const response = await requestDnrEnabled(enabled, true);
-  dnrToggle.disabled = false;
-
-  if (!response.ok || !response.settings) {
-    dnrToggle.checked = settings.enableFrameHeaderRelaxation;
-    setStatus(response.error || "Could not update compatibility mode.");
-    return;
-  }
-
-  settings = response.settings;
-  dnrToggle.checked = settings.enableFrameHeaderRelaxation;
-  setStatus(`Compatibility mode ${settings.enableFrameHeaderRelaxation ? "enabled" : "disabled"}.`);
-  renderDiagnostics();
-  if (currentUrl) {
-    reloadCurrentUrl();
-  }
-}
-
 async function requestDnrEnabled(enabled         , suppressStorageReload         )                           {
   if (suppressStorageReload) {
     applyingLocalFrameMode = true;
@@ -321,19 +236,16 @@ async function requestDnrEnabled(enabled         , suppressStorageReload        
 
 async function restoreFrameModeAfterDiagnostic(enabled         )                {
   if (settings.enableFrameHeaderRelaxation === enabled) {
-    dnrToggle.checked = enabled;
     return;
   }
 
   const response = await requestDnrEnabled(enabled, true);
   if (!response.ok || !response.settings) {
-    dnrToggle.checked = settings.enableFrameHeaderRelaxation;
     setStatus(response.error || "Diagnostic saved, but compatibility mode could not be restored.");
     return;
   }
 
   settings = response.settings;
-  dnrToggle.checked = settings.enableFrameHeaderRelaxation;
   renderDiagnostics();
 }
 
@@ -352,13 +264,11 @@ async function runDiagnostic(presetId          , dnrEnabled         )           
   const restoreFrameMode = settings.enableFrameHeaderRelaxation;
   const response = await requestDnrEnabled(dnrEnabled, true);
   if (!response.ok || !response.settings) {
-    dnrToggle.checked = settings.enableFrameHeaderRelaxation;
     setStatus(response.error || "Could not update compatibility mode for diagnostics.");
     return;
   }
 
   settings = response.settings;
-  dnrToggle.checked = settings.enableFrameHeaderRelaxation;
 
   const key = diagnosticKey(presetId, dnrEnabled);
   const token = loadToken + 1;
@@ -375,8 +285,6 @@ async function runDiagnostic(presetId          , dnrEnabled         )           
   renderDiagnostics();
   setStatus(`Testing ${preset.label} with compatibility mode ${dnrEnabled ? "on" : "off"}...`);
 
-  presetSelect.value = presetId;
-  updateCustomUrlUi(presetId);
   await loadTarget(presetId, preset.label, preset.url);
   if (activeDiagnostic?.key === key) {
     activeDiagnostic = { ...activeDiagnostic, token: loadToken };
@@ -430,39 +338,8 @@ function updateActiveDiagnostic(status                  , message         )     
     });
 }
 
-function renderPresetSelect()       {
-  presetSelect.textContent = "";
-
-  for (const preset of BUILT_IN_PRESETS) {
-    presetSelect.append(option(preset.id, preset.label));
-  }
-
-  presetSelect.append(option(CUSTOM_PRESET_ID, "Custom URL"));
-
-  for (const customUrl of settings.customUrls) {
-    presetSelect.append(option(makeCustomPresetId(customUrl.id), customUrl.label));
-  }
-}
-
 function syncSettingsUi()       {
-  renderPresetSelect();
-  presetSelect.value = settings.activePresetId;
-  updateCustomUrlUi(settings.activePresetId);
-  dnrToggle.checked = settings.enableFrameHeaderRelaxation;
   renderDiagnostics();
-}
-
-function updateCustomUrlUi(activeId                )       {
-  const target = resolveTarget(settings, activeId);
-  const show = activeId === CUSTOM_PRESET_ID;
-  customUrlControls.hidden = !show;
-  customHelp.hidden = !show;
-  if (show) {
-    customUrlInput.value = target.url;
-    customUrlInput.focus({ preventScroll: true });
-  } else {
-    customUrlInput.value = "";
-  }
 }
 
 function renderDiagnostics()       {
@@ -529,13 +406,6 @@ function markButton(label        , presetId          , dnrEnabled         , stat
   return button;
 }
 
-function option(value        , label        )                    {
-  const item = document.createElement("option");
-  item.value = value;
-  item.textContent = label;
-  return item;
-}
-
 function cell(text        )                       {
   const td = document.createElement("td");
   td.textContent = text;
@@ -548,10 +418,6 @@ async function sendMessage(message                )                           {
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
-}
-
-function closeMoreActions()       {
-  moreActionsMenu.open = false;
 }
 
 function clearLoadTimers()       {
