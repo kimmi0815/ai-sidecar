@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Sidecar</title>
+    <link rel="stylesheet" href="./sidepanel.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#aiFrame">Skip to AI frame</a>
+    <main class="app">
+      <header class="app-header">
+        <div class="brand-row">
+          <div class="brand" aria-label="AI Sidecar">
+            <span class="brand-mark" aria-hidden="true">AI</span>
+            <span>AI Sidecar</span>
+          </div>
+          <div class="toolbar-actions" aria-label="Page actions">
+            <button id="copyPageButton" class="button primary" type="button" title="Copy a prompt for the active page">Copy prompt</button>
+            <button id="reloadButton" class="icon-button" type="button" aria-label="Reload service" title="Reload service">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v6h-6"/></svg>
+            </button>
+            <details id="moreActionsMenu" class="action-menu">
+              <summary class="icon-button" aria-label="More actions" title="More actions">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </summary>
+              <div class="menu-popover">
+                <button id="openWindowButton" class="menu-item" type="button">Open in side window</button>
+                <button id="openTabButton" class="menu-item" type="button">Open in tab</button>
+                <button id="optionsButton" class="menu-item" type="button">Options</button>
+              </div>
+            </details>
+          </div>
+        </div>
+        <div class="service-row">
+          <select id="presetSelect" aria-label="AI service"></select>
+          <div id="customUrlControls" class="custom-url-row" hidden>
+            <input id="customUrlInput" class="custom-url" type="url" placeholder="https://example.com/" aria-label="Custom URL">
+            <button id="applyCustomUrlButton" class="button" type="button">Open</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="status-bar" role="status" aria-live="polite" aria-atomic="true">
+        <span id="loadingSpinner" class="spinner" hidden aria-hidden="true"></span>
+        <span id="statusText">Loading AI Sidecar...</span>
+        <span id="elapsedText" class="elapsed" hidden></span>
+        <label class="toggle" title="Compatibility mode can help bundled AI services load in the side panel">
+          <input id="dnrToggle" type="checkbox">
+          <span>Compatibility mode</span>
+        </label>
+      </section>
+
+      <section id="customHelp" class="helper-text" hidden>
+        Use HTTPS, localhost, or 127.0.0.1. Saved custom URLs can be edited in Options.
+      </section>
+
+      <section class="location-bar" aria-label="Current service URL">
+        <span>URL</span>
+        <input id="currentUrlInput" type="url" readonly aria-label="Current service URL">
+      </section>
+
+      <section class="frame-shell">
+        <iframe
+          id="aiFrame"
+          title="AI service"
+          tabindex="0"
+          allow="clipboard-read; clipboard-write"
+          referrerpolicy="strict-origin-when-cross-origin"></iframe>
+
+        <section id="fallbackPanel" class="fallback" hidden>
+          <div class="fallback-content">
+            <h2><span id="fallbackServiceName">This service</span> may not open inside the Side Panel.</h2>
+            <p>Sign-in, cookies, or embed restrictions can block the frame. Try again, or open it in a side window when the frame stays blank.</p>
+            <div class="fallback-actions">
+              <button id="fallbackReloadButton" class="button" type="button">Try again</button>
+              <button id="fallbackOpenWindowButton" class="button primary" type="button">Open in side window</button>
+              <button id="fallbackOpenTabButton" class="button" type="button">Open in tab</button>
+            </div>
+            <p class="fallback-note">Sidecar can open the selected service URL, but embedded pages may not expose their current in-frame navigation.</p>
+          </div>
+        </section>
+      </section>
+
+      <details id="diagnosticsDetails" class="diagnostics" hidden>
+        <summary>Developer diagnostics</summary>
+        <p class="diagnostic-copy">Run each bundled service with compatibility mode off and on. AI Sidecar restores your previous setting after each test. Cross-origin frames cannot be inspected, so mark the visual result manually.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Mode off</th>
+              <th>Mode on</th>
+              <th>Run</th>
+              <th>Mark</th>
+            </tr>
+          </thead>
+          <tbody id="diagnosticsTable"></tbody>
+        </table>
+      </details>
+    </main>
+
+    <script type="module" src="../../dist/sidepanel/main.js"></script>
+  </body>
+</html>

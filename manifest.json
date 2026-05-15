@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "AI Sidecar",
+  "version": "0.1.0",
+  "description": "Keep ChatGPT, Claude, Gemini, NotebookLM, Google Keep, or a custom AI URL in Chrome's Side Panel.",
+  "minimum_chrome_version": "116",
+  "action": {
+    "default_title": "Open AI Sidecar"
+  },
+  "permissions": [
+    "activeTab",
+    "clipboardWrite",
+    "contextMenus",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "offscreen",
+    "scripting",
+    "sidePanel",
+    "storage",
+    "tabs",
+    "windows"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://*.chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://*.claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://notebooklm.google.com/*",
+    "https://keep.google.com/*"
+  ],
+  "background": {
+    "service_worker": "dist/background/service-worker.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "options_page": "src/options/index.html",
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Open AI Sidecar side panel"
+    }
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "allow_framing_ai_sites",
+        "enabled": true,
+        "path": "rules/allow-framing-ai-sites.json"
+      }
+    ]
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src https: http://localhost:* http://127.0.0.1:*;"
+  }
+}

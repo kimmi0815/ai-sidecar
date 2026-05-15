@@ -1,0 +1,15 @@
+{
+  "name": "ai-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A Manifest V3 Chrome extension that keeps AI services in the Chrome Side Panel.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "build:local": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

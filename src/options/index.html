@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Sidecar Options</title>
+    <link rel="stylesheet" href="./options.css">
+  </head>
+  <body>
+    <main class="options">
+      <header>
+        <h1>AI Sidecar Options</h1>
+        <p>Choose the default service, manage custom URLs, and control iframe compatibility mode.</p>
+      </header>
+
+      <section class="option-card">
+        <h2>Default service</h2>
+        <label class="field">
+          <span>Open this service first</span>
+          <select id="defaultPresetSelect"></select>
+        </label>
+      </section>
+
+      <section class="option-card">
+        <h2>Custom URLs</h2>
+        <form id="customUrlForm" class="custom-form">
+          <label class="field">
+            <span>Name</span>
+            <input id="customLabelInput" type="text" placeholder="Research workspace">
+          </label>
+          <label class="field">
+            <span>URL</span>
+            <input id="customUrlInput" type="url" placeholder="https://example.com/">
+          </label>
+          <button class="button primary" type="submit">Add URL</button>
+        </form>
+        <div id="customUrlList" class="url-list"></div>
+      </section>
+
+      <section class="option-card">
+        <h2>Iframe compatibility</h2>
+        <label class="toggle-row">
+          <input id="dnrToggle" type="checkbox">
+          <span>Relax frame-blocking headers for allowlisted AI subframes</span>
+        </label>
+        <p class="hint">This only applies to the bundled AI allowlist and only to sub_frame requests. It does not apply to all URLs or main frames.</p>
+      </section>
+
+      <div class="footer-actions">
+        <button id="resetSettingsButton" class="button secondary" type="button">Reset to defaults</button>
+        <p id="statusText" class="status" role="status"></p>
+      </div>
+    </main>
+
+    <script type="module" src="../../dist/options/main.js"></script>
+  </body>
+</html>
