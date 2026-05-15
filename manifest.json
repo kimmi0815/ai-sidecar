@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "AI Sidecar",
+  "name": "anyside",
   "version": "0.1.0",
   "description": "Keep ChatGPT, Claude, Gemini, NotebookLM, Google Keep, or a custom AI URL in Chrome's Side Panel.",
   "minimum_chrome_version": "116",
@@ -11,7 +11,7 @@
     "128": "assets/icons/icon-128.png"
   },
   "action": {
-    "default_title": "Open AI Sidecar",
+    "default_title": "Open anyside",
     "default_icon": {
       "16": "assets/icons/icon-16.png",
       "32": "assets/icons/icon-32.png",
@@ -55,7 +55,7 @@
         "default": "Ctrl+Shift+Y",
         "mac": "Command+Shift+Y"
       },
-      "description": "Open AI Sidecar side panel"
+      "description": "Open anyside side panel"
     }
   },
   "declarative_net_request": {

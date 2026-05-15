@@ -1,1 +1,6 @@
+node_modules/
+release/
+.DS_Store
+__MACOSX/
+.claude/
 _metadata/

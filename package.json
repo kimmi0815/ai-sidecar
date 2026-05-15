@@ -1,5 +1,5 @@
 {
-  "name": "ai-sidecar",
+  "name": "anyside",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,7 +7,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.json",
-    "build:local": "node scripts/build.mjs"
+    "build:local": "node scripts/build.mjs",
+    "release:zip": "node scripts/package-extension.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

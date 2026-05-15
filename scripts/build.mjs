@@ -28,9 +28,10 @@ const files = await collectTypescriptFiles(srcDir);
 for (const file of files) {
   const source = await readFile(file, "utf8");
   const js = stripTypeScriptTypes(source, { mode: "strip" });
+  const cleanedJs = js.replace(/[ \t]+$/gm, "");
   const outFile = join(distDir, relative(srcDir, file)).replace(/\.ts$/, ".js");
   await mkdir(dirname(outFile), { recursive: true });
-  await writeFile(outFile, `${js}\n`);
+  await writeFile(outFile, `${cleanedJs}\n`);
 }
 
 console.log(`Built ${files.length} TypeScript files into dist/.`);

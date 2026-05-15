@@ -1,12 +1,13 @@
 import { Messages } from "../shared/messages.js";
 import { createActiveTabPrompt, createSelectionPrompt } from "../shared/prompt.js";
 import { FALLBACK_WINDOW_KEY, getSettings, saveSettings, updateSettings } from "../shared/storage.js";
-                                                                                               
+
 
 const DNR_RULESET_ID = "allow_framing_ai_sites";
 const OFFSCREEN_DOCUMENT_PATH = "src/offscreen/clipboard.html";
-const MENU_SELECTION_ID = "ask-ai-sidecar-selection";
-const MENU_OPEN_ID = "open-ai-sidecar";
+const MENU_SELECTION_ID = "ask-anyside-selection";
+const MENU_OPEN_ID = "open-anyside";
+const LEGACY_FALLBACK_WINDOW_KEY = "aiSidecar.fallbackWindow";
 
 chrome.runtime.onInstalled.addListener(() => {
   void initializeExtension({ resetMenus: true });
@@ -67,12 +68,12 @@ async function createContextMenus()                {
   await chrome.contextMenus.removeAll();
   chrome.contextMenus.create({
     id: MENU_SELECTION_ID,
-    title: "Ask AI Sidecar about selection",
+    title: "Ask anyside about selection",
     contexts: ["selection"]
   });
   chrome.contextMenus.create({
     id: MENU_OPEN_ID,
-    title: "Open AI Sidecar",
+    title: "Open anyside",
     contexts: ["all"]
   });
 }
@@ -177,7 +178,7 @@ async function ensureOffscreenDocument()                {
   await chrome.offscreen.createDocument({
     url: OFFSCREEN_DOCUMENT_PATH,
     reasons: ["CLIPBOARD"],
-    justification: "Copy AI Sidecar prompts from context menus and extension UI."
+    justification: "Copy anyside prompts from context menus and extension UI."
   });
 }
 
@@ -277,9 +278,9 @@ async function tryReuseFallbackWindow(state                     , url        )  
   }
 }
 
-function calculateFallbackLayout(window                                   )   
-                                   
-                                      
+function calculateFallbackLayout(window                                   )
+
+
   {
   const left = window?.left ?? 80;
   const top = window?.top ?? 80;
@@ -302,8 +303,13 @@ function calculateFallbackLayout(window                                   )
 }
 
 async function getFallbackWindowState()                               {
-  const stored = await chrome.storage.local.get(FALLBACK_WINDOW_KEY);
-  const state = stored[FALLBACK_WINDOW_KEY];
+  const stored = await chrome.storage.local.get([FALLBACK_WINDOW_KEY, LEGACY_FALLBACK_WINDOW_KEY]);
+  if (!stored[FALLBACK_WINDOW_KEY] && stored[LEGACY_FALLBACK_WINDOW_KEY]) {
+    await chrome.storage.local.set({ [FALLBACK_WINDOW_KEY]: stored[LEGACY_FALLBACK_WINDOW_KEY] });
+    await chrome.storage.local.remove(LEGACY_FALLBACK_WINDOW_KEY);
+  }
+
+  const state = stored[FALLBACK_WINDOW_KEY] || stored[LEGACY_FALLBACK_WINDOW_KEY];
   return state && typeof state === "object" ? state                        : {};
 }
 

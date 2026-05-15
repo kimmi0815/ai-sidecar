@@ -2,8 +2,10 @@ import { BUILT_IN_PRESETS, CUSTOM_PRESET_ID, DEFAULT_PRESET_ID, isBuiltInPresetI
 import type { ActivePresetId, CustomUrl, DiagnosticEntry, DiagnosticStatus, Settings } from "./types.js";
 import { normalizeUserUrl } from "./url.js";
 
-export const SETTINGS_KEY = "aiSidecar.settings";
-export const FALLBACK_WINDOW_KEY = "aiSidecar.fallbackWindow";
+export const SETTINGS_KEY = "anyside.settings";
+export const FALLBACK_WINDOW_KEY = "anyside.fallbackWindow";
+
+const LEGACY_SETTINGS_KEY = "aiSidecar.settings";
 
 function defaultLastUrlByPreset(): Record<string, string> {
   const entries = BUILT_IN_PRESETS.map((preset) => [preset.id, preset.url]);
@@ -164,8 +166,19 @@ export function normalizeSettings(value: unknown): Settings {
 }
 
 export async function getSettings(): Promise<Settings> {
-  const stored = await chrome.storage.local.get(SETTINGS_KEY);
-  return normalizeSettings(stored[SETTINGS_KEY]);
+  const stored = await chrome.storage.local.get([SETTINGS_KEY, LEGACY_SETTINGS_KEY]);
+  if (stored[SETTINGS_KEY]) {
+    return normalizeSettings(stored[SETTINGS_KEY]);
+  }
+
+  if (stored[LEGACY_SETTINGS_KEY]) {
+    const migrated = normalizeSettings(stored[LEGACY_SETTINGS_KEY]);
+    await chrome.storage.local.set({ [SETTINGS_KEY]: migrated });
+    await chrome.storage.local.remove(LEGACY_SETTINGS_KEY);
+    return migrated;
+  }
+
+  return defaultSettings();
 }
 
 export async function saveSettings(settings: Settings): Promise<Settings> {

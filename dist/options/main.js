@@ -1,7 +1,7 @@
 import { Messages } from "../shared/messages.js";
 import { BUILT_IN_PRESETS, CUSTOM_PRESET_ID, DEFAULT_PRESET_ID, makeCustomPresetId } from "../shared/presets.js";
 import { defaultSettings, getSettings, normalizeSettings, saveSettings, SETTINGS_KEY } from "../shared/storage.js";
-                                                                                                               
+
 import { labelFromUrl, normalizeUserUrl } from "../shared/url.js";
 
 const defaultPresetSelect = element                   ("defaultPresetSelect");
@@ -12,6 +12,7 @@ const customUrlList = element             ("customUrlList");
 const dnrToggle = element                  ("dnrToggle");
 const resetSettingsButton = element                   ("resetSettingsButton");
 const statusText = element             ("statusText");
+const CUSTOM_URL_ERROR = "Enter HTTPS, or http://localhost / http://127.0.0.1 for local testing. You can omit the protocol.";
 
 let settings          ;
 let editingCustomUrlId                = null;
@@ -170,9 +171,12 @@ function editableCustomUrlRow(customUrl           )              {
 
   const url = document.createElement("input");
   url.name = "url";
-  url.type = "url";
+  url.type = "text";
+  url.inputMode = "url";
+  url.setAttribute("autocomplete", "url");
+  url.spellcheck = false;
   url.value = customUrl.url;
-  url.placeholder = "https://example.com/";
+  url.placeholder = "example.com or https://example.com/";
 
   const actions = document.createElement("div");
   actions.className = "row-actions";
@@ -196,7 +200,7 @@ function editableCustomUrlRow(customUrl           )              {
 async function addCustomUrl()                {
   const url = normalizeUserUrl(customUrlInput.value);
   if (!url) {
-    setStatus("Use HTTPS, or localhost / 127.0.0.1 for local testing.");
+    setStatus(CUSTOM_URL_ERROR);
     return;
   }
 
@@ -218,7 +222,7 @@ async function updateCustomUrl(id        , form                 )               
   const formData = new FormData(form);
   const url = normalizeUserUrl(String(formData.get("url") || ""));
   if (!url) {
-    setStatus("Use HTTPS, or localhost / 127.0.0.1 for local testing.");
+    setStatus(CUSTOM_URL_ERROR);
     return;
   }
 

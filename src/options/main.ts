@@ -12,6 +12,7 @@ const customUrlList = element<HTMLElement>("customUrlList");
 const dnrToggle = element<HTMLInputElement>("dnrToggle");
 const resetSettingsButton = element<HTMLButtonElement>("resetSettingsButton");
 const statusText = element<HTMLElement>("statusText");
+const CUSTOM_URL_ERROR = "Enter HTTPS, or http://localhost / http://127.0.0.1 for local testing. You can omit the protocol.";
 
 let settings: Settings;
 let editingCustomUrlId: string | null = null;
@@ -170,9 +171,12 @@ function editableCustomUrlRow(customUrl: CustomUrl): HTMLElement {
 
   const url = document.createElement("input");
   url.name = "url";
-  url.type = "url";
+  url.type = "text";
+  url.inputMode = "url";
+  url.setAttribute("autocomplete", "url");
+  url.spellcheck = false;
   url.value = customUrl.url;
-  url.placeholder = "https://example.com/";
+  url.placeholder = "example.com or https://example.com/";
 
   const actions = document.createElement("div");
   actions.className = "row-actions";
@@ -196,7 +200,7 @@ function editableCustomUrlRow(customUrl: CustomUrl): HTMLElement {
 async function addCustomUrl(): Promise<void> {
   const url = normalizeUserUrl(customUrlInput.value);
   if (!url) {
-    setStatus("Use HTTPS, or localhost / 127.0.0.1 for local testing.");
+    setStatus(CUSTOM_URL_ERROR);
     return;
   }
 
@@ -218,7 +222,7 @@ async function updateCustomUrl(id: string, form: HTMLFormElement): Promise<void>
   const formData = new FormData(form);
   const url = normalizeUserUrl(String(formData.get("url") || ""));
   if (!url) {
-    setStatus("Use HTTPS, or localhost / 127.0.0.1 for local testing.");
+    setStatus(CUSTOM_URL_ERROR);
     return;
   }
 

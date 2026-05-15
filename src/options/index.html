@@ -3,16 +3,16 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI Sidecar Options</title>
+    <title>anyside Options</title>
     <link rel="stylesheet" href="./options.css">
   </head>
   <body>
     <main class="options">
       <header class="options-hero">
         <div class="brand-heading">
-          <img class="brand-mark" src="../../assets/brand/sidecar-logo.png" alt="" aria-hidden="true">
+          <img class="brand-mark" src="../../assets/brand/anyside-logo.png" alt="" aria-hidden="true">
           <div>
-            <h1>AI Sidecar Options</h1>
+            <h1>anyside Options</h1>
             <p>Choose what appears in the side panel, manage custom URLs, and control iframe compatibility mode.</p>
           </div>
         </div>
@@ -28,14 +28,14 @@
 
       <section class="option-card">
         <h2>Custom URLs</h2>
-        <form id="customUrlForm" class="custom-form">
+        <form id="customUrlForm" class="custom-form" novalidate>
           <label class="field">
             <span>Name</span>
             <input id="customLabelInput" type="text" placeholder="Research workspace">
           </label>
           <label class="field">
             <span>URL</span>
-            <input id="customUrlInput" type="url" placeholder="https://example.com/">
+            <input id="customUrlInput" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="example.com or https://example.com/">
           </label>
           <button class="button primary" type="submit">Add URL</button>
         </form>

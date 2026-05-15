@@ -4,7 +4,10 @@ export function normalizeUserUrl(input        )                {
     return null;
   }
 
-  const withProtocol = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const withProtocol = withDefaultProtocol(trimmed);
+  if (!withProtocol) {
+    return null;
+  }
 
   try {
     const url = new URL(withProtocol);
@@ -20,6 +23,22 @@ export function normalizeUserUrl(input        )                {
   } catch {
     return null;
   }
+}
+
+function withDefaultProtocol(input        )                {
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(input)) {
+    return input;
+  }
+
+  if (/^(localhost|127\.0\.0\.1)(?::\d+)?(?:[/?#].*)?$/i.test(input)) {
+    return `http://${input}`;
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:/i.test(input) && !/^[^/:?#]+\.[^/:?#]+:\d+(?:[/?#].*)?$/i.test(input)) {
+    return null;
+  }
+
+  return `https://${input}`;
 }
 
 export function labelFromUrl(url        )         {
